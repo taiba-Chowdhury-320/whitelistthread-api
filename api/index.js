@@ -6,31 +6,20 @@
 // ╚══════════════════════════════════════════╝
 
 const express = require("express");
+const path = require("path");
 const app = express();
 
 app.use(express.json());
+app.use(express.static(path.join(__dirname, "../public")));
 
 // ─── In-memory store ──────────────────────────────────────────────
 let whiteListThreadIds = [];
 let whiteListModeEnabled = false;
 let notiEnabled = true;
 
-// ─── Root Route ───────────────────────────────────────────────────
+// ─── Root Route → HTML Dashboard ─────────────────────────────────
 app.get("/", (req, res) => {
-  res.json({
-    author: "Rocky Chowdhury",
-    project: "WhiteListThread API",
-    version: "1.1.0",
-    status: "🟢 Online",
-    endpoints: {
-      "GET  /api/list":      "List all whitelisted thread IDs",
-      "POST /api/add":       "Add thread ID(s) { tids: ['123', '456'] }",
-      "POST /api/remove":    "Remove thread ID(s) { tids: ['123'] }",
-      "GET  /api/mode":      "Get current mode status",
-      "POST /api/mode":      "Set mode { enable: true/false }",
-      "POST /api/mode/noti": "Set noti { enable: true/false }",
-    },
-  });
+  res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
 // ─── GET /api/list ────────────────────────────────────────────────
