@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WhiteListThread API — Rocky Chowdhury</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: #0e1117;
+      --border: #1e2a1e;
+      --green: #00ff88;
+      --green-dim: #00cc6a;
+      --green-dark: #003d1f;
+      --text: #c8ffd4;
+      --muted: #4a7a5a;
+      --red: #ff4466;
+      --yellow: #ffcc00;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,136,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,136,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Glow orb ── */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(0,255,136,0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeDown 0.8s ease both;
+    }
+
+    .badge {
+      display: inline-block;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--green);
+      border: 1px solid var(--green);
+      padding: 4px 14px;
+      border-radius: 2px;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+      animation: pulse 2s infinite;
+    }
+
+    h1 {
+      font-size: clamp(32px, 7vw, 64px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      line-height: 1;
+      color: #fff;
+    }
+
+    h1 span {
+      color: var(--green);
+      text-shadow: 0 0 30px rgba(0,255,136,0.5);
+    }
+
+    .sub {
+      margin-top: 14px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 1px;
+    }
+
+    .author {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--green-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 24px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--green);
+    }
+
+    .dot {
+      width: 8px; height: 8px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: blink 1.5s infinite;
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    /* ── Section title ── */
+    .section-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 4px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Endpoint cards ── */
+    .endpoints {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 50px;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--green-dark);
+      padding: 16px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: default;
+    }
+
+    .card:hover {
+      border-left-color: var(--green);
+      background: #111a11;
+    }
+
+    .method {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 10px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      min-width: 50px;
+      text-align: center;
+    }
+
+    .method.get  { background: #003322; color: var(--green); border: 1px solid var(--green-dark); }
+    .method.post { background: #1a1200; color: var(--yellow); border: 1px solid #443300; }
+
+    .endpoint-info { flex: 1; }
+
+    .path {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 14px;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .body-hint {
+      margin-top: 6px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: #2a5a3a;
+      background: #0a1a0a;
+      padding: 6px 10px;
+      border-left: 2px solid var(--green-dark);
+    }
+
+    /* ── Info boxes ── */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 50px;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+
+    .info-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 20px;
+      text-align: center;
+    }
+
+    .info-box .val {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 22px;
+      color: var(--green);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .info-box .lbl {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* ── Note box ── */
+    .note {
+      background: #0e1a0e;
+      border: 1px solid var(--green-dark);
+      padding: 16px 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 50px;
+      animation: fadeUp 0.8s 0.4s ease both;
+    }
+
+    .note strong { color: var(--green); }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 2px;
+      animation: fadeUp 0.8s 0.5s ease both;
+    }
+
+    footer span { color: var(--green); }
+
+    /* ── Animations ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.5; }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.2; }
+    }
+
+    /* ── Scanline effect ── */
+    .scanline {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--green), transparent);
+      opacity: 0.3;
+      animation: scan 4s linear infinite;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    @keyframes scan {
+      from { top: 0; }
+      to   { top: 100vh; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="badge">● SYSTEM ONLINE</div>
+    <h1>WhiteList<span>Thread</span></h1>
+    <p class="sub">REST API — v1.1.0 — Vercel Serverless</p>
+    <p class="author">by Rocky Chowdhury</p>
+    <div class="status-bar">
+      <div class="dot"></div>
+      <span>API STATUS: RUNNING</span>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <div class="section-title">// system info</div>
+  <div class="info-grid">
+    <div class="info-box">
+      <span class="val">v1.1.0</span>
+      <span class="lbl">Version</span>
+    </div>
+    <div class="info-box">
+      <span class="val">6</span>
+      <span class="lbl">Endpoints</span>
+    </div>
+    <div class="info-box">
+      <span class="val">🟢</span>
+      <span class="lbl">Status</span>
+    </div>
+    <div class="info-box">
+      <span class="val">Node.js</span>
+      <span class="lbl">Runtime</span>
+    </div>
+  </div>
+
+  <!-- Endpoints -->
+  <div class="section-title">// api endpoints</div>
+  <div class="endpoints">
+
+    <div class="card">
+      <span class="method get">GET</span>
+      <div class="endpoint-info">
+        <div class="path">/api/list</div>
+        <div class="desc">সব whitelisted thread ID এর list দেখো</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="method post">POST</span>
+      <div class="endpoint-info">
+        <div class="path">/api/add</div>
+        <div class="desc">Thread ID whitelist এ add করো</div>
+        <div class="body-hint">body: { "tids": ["123456", "789012"] }</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="method post">POST</span>
+      <div class="endpoint-info">
+        <div class="path">/api/remove</div>
+        <div class="desc">Thread ID whitelist থেকে remove করো</div>
+        <div class="body-hint">body: { "tids": ["123456"] }</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="method get">GET</span>
+      <div class="endpoint-info">
+        <div class="path">/api/mode</div>
+        <div class="desc">Whitelist mode এবং notification status দেখো</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="method post">POST</span>
+      <div class="endpoint-info">
+        <div class="path">/api/mode</div>
+        <div class="desc">Whitelist mode on/off করো</div>
+        <div class="body-hint">body: { "enable": true }</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="method post">POST</span>
+      <div class="endpoint-info">
+        <div class="path">/api/mode/noti</div>
+        <div class="desc">Non-whitelisted thread notification on/off করো</div>
+        <div class="body-hint">body: { "enable": false }</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Note -->
+  <div class="section-title">// note</div>
+  <div class="note">
+    ⚠ &nbsp;<strong>Serverless Note:</strong> এই API Vercel Serverless এ চলে।<br>
+    Server restart হলে in-memory data <strong>reset</strong> হয়ে যাবে।<br>
+    Permanent storage এর জন্য MongoDB Atlas বা Vercel KV ব্যবহার করো।<br><br>
+    📦 &nbsp;<strong>GoatBot:</strong> whitelistthread.js plugin দিয়ে সরাসরি এই API control করা যাবে।
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <span>WhiteListThread API</span> — Built by <span>Rocky Chowdhury</span> — Powered by Vercel
+  </footer>
+
+</div>
+</body>
+</html>
